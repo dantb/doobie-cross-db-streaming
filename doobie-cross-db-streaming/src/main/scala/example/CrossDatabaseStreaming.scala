@@ -4,12 +4,13 @@ import java.sql.Connection
 
 import cats.data.Kleisli
 import cats.effect.IO
-import cats.~>
+import cats.{Monoid, ~>}
 import doobie.{ConnectionIO, Transactor}
 import doobie.implicits._
 import fs2.Stream
 
 object CrossDatabaseStreaming {
+
   type KleisliPartial[A] = Kleisli[IO, Connection, A]
 
   val ioToKleisli = new ~>[IO, KleisliPartial] {
@@ -22,14 +23,14 @@ object CrossDatabaseStreaming {
    * 2. Removed kind projections for use in ammonite scripts
    * 3. Removed effect polymorphism
    */
-  def streamAcrossTransactors[Source, SinkInput, SinkReturn](
+  def streamAcrossTransactors[Source, SinkInput, SinkReturn: Monoid](
     source: Stream[ConnectionIO, Source],
     sink: SinkInput => ConnectionIO[SinkReturn],
     transformSourceInput: Source => SinkInput,
     sourceTransactor: Transactor[IO],
     sinkTransactor: Transactor[IO]
-  ): IO[Unit] =
-    sinkTransactor.exec.apply {
+  ): IO[SinkReturn] =
+    sinkTransactor.exec.apply[SinkReturn] {
       source
         .transact(sourceTransactor)
         .translate(ioToKleisli)
@@ -37,6 +38,6 @@ object CrossDatabaseStreaming {
           sink(transformSourceInput(source)).foldMap[KleisliPartial](sinkTransactor.interpret)
         }
         .compile
-        .drain
+        .foldMonoid // e.g. combining integers for number of records inserted
     }
 }

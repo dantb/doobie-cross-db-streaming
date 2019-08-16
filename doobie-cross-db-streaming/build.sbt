@@ -15,7 +15,9 @@ libraryDependencies ++= Seq(
   "org.tpolecat" %% "doobie-postgres"  % "0.7.0",          // Postgres driver 42.2.5 + type mappings.
   "org.tpolecat" %% "doobie-quill"     % "0.7.0",          // Support for Quill 3.1.0
   "org.tpolecat" %% "doobie-specs2"    % "0.7.0" % "test", // Specs2 support for typechecking statements.
-  "org.tpolecat" %% "doobie-scalatest" % "0.7.0" % "test"  // ScalaTest support for typechecking statements.
+  "org.tpolecat" %% "doobie-scalatest" % "0.7.0" % "test",  // ScalaTest support for typechecking statements.
+
+  "ch.qos.logback" % "logback-classic" % "1.2.3"
 
 )
 
